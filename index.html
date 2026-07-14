@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>小偵探的圖形配對大冒險</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif, "Microsoft JhengHei";
+            background: linear-gradient(135deg, #e0f2fe 0%, #fef08a 100%);
+            min-height: 100vh;
+            margin: 0;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            box-sizing: border-box;
+        }
+
+        .container {
+            max-width: 650px; /* 稍微加寬以容納 5 個格子 */
+            width: 100%;
+            background: white;
+            padding: 20px;
+            border-radius: 25px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            text-align: center;
+            box-sizing: border-box;
+        }
+
+        h1 { color: #0284c7; margin: 0 0 5px 0; font-size: 28px; }
+        h2 { color: #475569; font-size: 18px; margin: 0 0 15px 0; }
+        
+        .story-box {
+            background: #f0f9ff;
+            border-left: 6px solid #0ea5e9;
+            padding: 12px 15px;
+            border-radius: 12px;
+            text-align: left;
+            margin-bottom: 20px;
+            font-size: 15px;
+            line-height: 1.5;
+        }
+
+        .game-zone { margin-bottom: 15px; }
+
+        /* 橫向排版：格子小、圖案大 */
+        .match-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-top: 15px;
+        }
+        .row {
+            display: flex;
+            justify-content: center;
+            gap: 10px; /* 緊湊間距 */
+            flex-wrap: wrap; /* 避免極端小螢幕塞不下 */
+        }
+        .item {
+            width: 85px;   /* 格子大小適中 */
+            height: 85px;  
+            background: #f1f5f9;
+            border: 4px solid #cbd5e1;
+            border-radius: 18px;
+            cursor: pointer;
+            font-size: 55px; /* 圖案依然很大、很清晰 */
+            transition: all 0.2s ease;
+            user-select: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .item:hover { transform: scale(1.05); background: #e2e8f0; }
+        .item.selected { background: #bae6fd; border-color: #38bdf8; box-shadow: 0 0 10px rgba(56, 189, 248, 0.5); }
+        .item.matched { background: #bbf7d0; border-color: #4ade80; cursor: default; transform: none; box-shadow: none;}
+
+        .vs-line {
+            font-size: 14px;
+            color: #94a3b8;
+            font-weight: bold;
+            margin: 5px 0;
+        }
+
+        /* 遊戲結束畫面 */
+        .btn {
+            background: #10b981;
+            color: white;
+            border: none;
+            padding: 12px 35px;
+            font-size: 18px;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: background 0.2s;
+            font-weight: bold;
+        }
+        .btn:hover { background: #059669; }
+        .msg { font-size: 18px; font-weight: bold; margin-top: 15px; min-height: 25px; }
+        .success { color: #16a34a; }
+        .error { color: #dc2626; }
+        
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>🕵️‍♂️ 小偵探圖形大冒險</h1>
+        <h2 id="stage-title">關聯性好朋友連線</h2>
+
+        <div class="story-box" id="story">
+            🚀 圖案找不到好朋友了！<br>
+            請<b>點擊「第一排」的一個圖案，再點擊「第二排」和它有關係的圖案</b>，把它們連起來！
+        </div>
+
+        <div id="level1" class="game-zone">
+            <div class="match-container">
+                <div class="row" id="left-col">
+                    <div class="item" data-id="1">🌧️</div>
+                    <div class="item" data-id="2">🧳</div>
+                    <div class="item" data-id="3">🦷</div>
+                    <div class="item" data-id="4">🔌</div>
+                    <div class="item" data-id="5">🐒</div>
+                </div>
+                
+                <div class="vs-line">👇 幫上面的圖案在下面找夥伴 👇</div>
+                
+                <div class="row" id="right-col">
+                    <div class="item" data-match="3">🪥</div>
+                    <div class="item" data-match="5">🍌</div>
+                    <div class="item" data-match="1">🌂</div>
+                    <div class="item" data-match="4">💡</div>
+                    <div class="item" data-match="2">🔑</div>
+                </div>
+            </div>
+        </div>
+
+        <div id="game-over" class="game-zone hidden">
+            <h2 style="font-size: 36px; color: #0284c7; margin-bottom: 10px;">🎉 任務大成功！ 🎉</h2>
+            <p style="font-size: 20px; color: #059669; font-weight: bold; margin-bottom: 20px;">你成功找回了所有圖形好朋友！太厲害了！</p>
+            <button class="btn" onclick="location.reload()" style="background: #0ea5e9;">再玩一次</button>
+        </div>
+
+        <div class="msg" id="message"></div>
+    </div>
+
+    <script>
+        let selectedLeft = null;
+        let matchedCount = 0;
+        const totalMatches = 5; // 增加到 5 組配對
+
+        const leftItems = document.querySelectorAll('#left-col .item');
+        const rightItems = document.querySelectorAll('#right-col .item');
+        const msgDiv = document.getElementById('message');
+
+        leftItems.forEach(item => {
+            item.addEventListener('click', () => {
+                if(item.classList.contains('matched')) return;
+                leftItems.forEach(i => i.classList.remove('selected'));
+                item.classList.add('selected');
+                selectedLeft = item;
+                msgDiv.textContent = "";
+            });
+        });
+
+        rightItems.forEach(item => {
+            item.addEventListener('click', () => {
+                if(item.classList.contains('matched') || !selectedLeft) return;
+                
+                const leftId = selectedLeft.getAttribute('data-id');
+                const rightMatchId = item.getAttribute('data-match');
+
+                if(leftId === rightMatchId) {
+                    // 配對成功
+                    selectedLeft.classList.remove('selected');
+                    selectedLeft.classList.add('matched');
+                    item.classList.add('matched');
+                    selectedLeft = null;
+                    matchedCount++;
+                    
+                    msgDiv.className = "msg success";
+                    msgDiv.textContent = "💖 太棒了！配對成功！";
+
+                    // 全部配對完成
+                    if(matchedCount === totalMatches) {
+                        setTimeout(() => {
+                            document.getElementById('level1').classList.add('hidden');
+                            document.getElementById('story').classList.add('hidden');
+                            document.getElementById('stage-title').classList.add('hidden');
+                            document.getElementById('game-over').classList.remove('hidden');
+                            msgDiv.textContent = "";
+                        }, 1200);
+                    }
+                } else {
+                    // 配對失敗
+                    msgDiv.className = "msg error";
+                    msgDiv.textContent = "❌ 咦？這兩個好像不太配，再想想看？";
+                    selectedLeft.classList.remove('selected');
+                    selectedLeft = null;
+                }
+            });
+        });
+    </script>
+</body>
+</html>
