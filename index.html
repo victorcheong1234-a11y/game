@@ -19,7 +19,7 @@
         }
 
         .container {
-            max-width: 650px; /* 稍微加寬以容納 5 個格子 */
+            max-width: 650px; 
             width: 100%;
             background: white;
             padding: 20px;
@@ -45,7 +45,7 @@
 
         .game-zone { margin-bottom: 15px; }
 
-        /* 橫向排版：格子小、圖案大 */
+        /* 橫向排版：5 個格子正好一排 */
         .match-container {
             display: flex;
             flex-direction: column;
@@ -55,17 +55,17 @@
         .row {
             display: flex;
             justify-content: center;
-            gap: 10px; /* 緊湊間距 */
-            flex-wrap: wrap; /* 避免極端小螢幕塞不下 */
+            gap: 10px; 
+            flex-wrap: wrap; 
         }
         .item {
-            width: 85px;   /* 格子大小適中 */
+            width: 85px;   
             height: 85px;  
             background: #f1f5f9;
             border: 4px solid #cbd5e1;
             border-radius: 18px;
             cursor: pointer;
-            font-size: 55px; /* 圖案依然很大、很清晰 */
+            font-size: 55px; 
             transition: all 0.2s ease;
             user-select: none;
             display: flex;
@@ -83,7 +83,6 @@
             margin: 5px 0;
         }
 
-        /* 遊戲結束畫面 */
         .btn {
             background: #10b981;
             color: white;
@@ -111,97 +110,151 @@
         <h2 id="stage-title">關聯性好朋友連線</h2>
 
         <div class="story-box" id="story">
-            🚀 圖案找不到好朋友了！<br>
+            🚀 <b>時光機故障了！</b>圖案找不到好朋友！<br>
             請<b>點擊「第一排」的一個圖案，再點擊「第二排」和它有關係的圖案</b>，把它們連起來！
         </div>
 
         <div id="level1" class="game-zone">
             <div class="match-container">
-                <div class="row" id="left-col">
-                    <div class="item" data-id="1">🌧️</div>
-                    <div class="item" data-id="2">🧳</div>
-                    <div class="item" data-id="3">🦷</div>
-                    <div class="item" data-id="4">🔌</div>
-                    <div class="item" data-id="5">🐒</div>
-                </div>
+                <div class="row" id="left-col"></div>
                 
                 <div class="vs-line">👇 幫上面的圖案在下面找夥伴 👇</div>
                 
-                <div class="row" id="right-col">
-                    <div class="item" data-match="3">🪥</div>
-                    <div class="item" data-match="5">🍌</div>
-                    <div class="item" data-match="1">🌂</div>
-                    <div class="item" data-match="4">💡</div>
-                    <div class="item" data-match="2">🔑</div>
-                </div>
+                <div class="row" id="right-col"></div>
             </div>
         </div>
 
         <div id="game-over" class="game-zone hidden">
             <h2 style="font-size: 36px; color: #0284c7; margin-bottom: 10px;">🎉 任務大成功！ 🎉</h2>
-            <p style="font-size: 20px; color: #059669; font-weight: bold; margin-bottom: 20px;">你成功找回了所有圖形好朋友！太厲害了！</p>
-            <button class="btn" onclick="location.reload()" style="background: #0ea5e9;">再玩一次</button>
+            <p style="font-size: 20px; color: #059669; font-weight: bold; margin-bottom: 20px;">你成功找回了今天的所有圖形好朋友！</p>
+            <button class="btn" onclick="location.reload()" style="background: #0ea5e9;">再玩一次（題目會變喔！）</button>
         </div>
 
         <div class="msg" id="message"></div>
     </div>
 
     <script>
+        // 🔮 豐富的 20 題題庫庫
+        const fullQuestionPool = [
+            { id: 1, left: "🌧️", right: "🌂" }, // 雨天 -> 雨傘
+            { id: 2, left: "🧳", right: "🔑" }, // 寶箱 -> 鑰匙
+            { id: 3, left: "🦷", right: "🪥" }, // 髒牙齒 -> 牙刷
+            { id: 4, left: "🔌", right: "💡" }, // 插頭 -> 電燈
+            { id: 5, left: "🐒", right: "🍌" }, // 猴子 -> 香蕉
+            { id: 6, left: "🦮", right: "🦴" }, // 狗 -> 骨頭
+            { id: 7, left: "🐱", right: "🐟" }, // 貓 -> 魚
+            { id: 8, left: "🐝", right: "🍯" }, // 蜜蜂 -> 蜂蜜
+            { id: 9, left: "🐰", right: "🥕" }, // 兔子 -> 蘿蔔
+            { id: 10, left: "🪵", right: "🔥" }, // 木頭 -> 火
+            { id: 11, left: "🦅", right: "🪹" }, // 鳥 -> 鳥巢
+            { id: 12, left: "🕸️", right: "🕷" }, // 蜘蛛網 -> 蜘蛛
+            { id: 13, left: "✉️", right: "📮" }, // 信封 -> 郵筒
+            { id: 14, left: "👶", right: "🍼" }, // 嬰兒 -> 奶瓶
+            { id: 15, left: "⚽", right: "🥅" }, // 足球 -> 球門
+            { id: 16, left: "✏️", right: "📝" }, // 鉛筆 -> 紙張
+            { id: 17, left: "🎨", right: "🖌️" }, // 調色盤 -> 畫筆
+            { id: 18, left: "🍔", right: "🍟" }, // 漢堡 -> 薯條
+            { id: 19, left: "🐟", right: "🐠" }, // 魚缸 -> 金魚
+            { id: 20, left: "☀️", right: "🕶️" }  // 太陽 -> 太陽眼鏡
+        ];
+
         let selectedLeft = null;
         let matchedCount = 0;
-        const totalMatches = 5; // 增加到 5 組配對
-
-        const leftItems = document.querySelectorAll('#left-col .item');
-        const rightItems = document.querySelectorAll('#right-col .item');
+        const totalMatches = 5; // 每次只抽 5 題
         const msgDiv = document.getElementById('message');
 
-        leftItems.forEach(item => {
-            item.addEventListener('click', () => {
-                if(item.classList.contains('matched')) return;
-                leftItems.forEach(i => i.classList.remove('selected'));
-                item.classList.add('selected');
-                selectedLeft = item;
-                msgDiv.textContent = "";
-            });
-        });
+        // 🎲 隨機洗牌演算法
+        function shuffle(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
 
-        rightItems.forEach(item => {
-            item.addEventListener('click', () => {
-                if(item.classList.contains('matched') || !selectedLeft) return;
+        // 🚀 初始化遊戲題目
+        function initGame() {
+            // 1. 從 20 題庫裡隨機抽 5 題
+            const shuffledPool = shuffle([...fullQuestionPool]);
+            const selectedQuestions = shuffledPool.slice(0, totalMatches);
+
+            // 2. 製作左邊題目的陣列（並洗牌打亂順序）
+            const leftQuestions = shuffle([...selectedQuestions]);
+            // 3. 製作右邊答案的陣列（並洗牌打亂順序）
+            const rightQuestions = shuffle([...selectedQuestions]);
+
+            const leftCol = document.getElementById('left-col');
+            const rightCol = document.getElementById('right-col');
+
+            // 4. 動態產生左邊的格子 HTML
+            leftQuestions.forEach(q => {
+                const item = document.createElement('div');
+                item.className = 'item';
+                item.setAttribute('data-id', q.id);
+                item.textContent = q.left;
+                item.addEventListener('click', () => handleLeftClick(item));
+                leftCol.appendChild(item);
+            });
+
+            // 5. 動態產生右邊的格子 HTML
+            rightQuestions.forEach(q => {
+                const item = document.createElement('div');
+                item.className = 'item';
+                item.setAttribute('data-match', q.id);
+                item.textContent = q.right;
+                item.addEventListener('click', () => handleRightClick(item));
+                rightCol.appendChild(item);
+            });
+        }
+
+        // 🟢 左邊點擊事件
+        function handleLeftClick(item) {
+            if(item.classList.contains('matched')) return;
+            document.querySelectorAll('#left-col .item').forEach(i => i.classList.remove('selected'));
+            item.classList.add('selected');
+            selectedLeft = item;
+            msgDiv.textContent = "";
+        }
+
+        // 🔵 右邊點擊事件
+        function handleRightClick(item) {
+            if(item.classList.contains('matched') || !selectedLeft) return;
+            
+            const leftId = selectedLeft.getAttribute('data-id');
+            const rightMatchId = item.getAttribute('data-match');
+
+            if(leftId === rightMatchId) {
+                // 配對成功
+                selectedLeft.classList.remove('selected');
+                selectedLeft.classList.add('matched');
+                item.classList.add('matched');
+                selectedLeft = null;
+                matchedCount++;
                 
-                const leftId = selectedLeft.getAttribute('data-id');
-                const rightMatchId = item.getAttribute('data-match');
+                msgDiv.className = "msg success";
+                msgDiv.textContent = "💖 太棒了！配對成功！";
 
-                if(leftId === rightMatchId) {
-                    // 配對成功
-                    selectedLeft.classList.remove('selected');
-                    selectedLeft.classList.add('matched');
-                    item.classList.add('matched');
-                    selectedLeft = null;
-                    matchedCount++;
-                    
-                    msgDiv.className = "msg success";
-                    msgDiv.textContent = "💖 太棒了！配對成功！";
-
-                    // 全部配對完成
-                    if(matchedCount === totalMatches) {
-                        setTimeout(() => {
-                            document.getElementById('level1').classList.add('hidden');
-                            document.getElementById('story').classList.add('hidden');
-                            document.getElementById('stage-title').classList.add('hidden');
-                            document.getElementById('game-over').classList.remove('hidden');
-                            msgDiv.textContent = "";
-                        }, 1200);
-                    }
-                } else {
-                    // 配對失敗
-                    msgDiv.className = "msg error";
-                    msgDiv.textContent = "❌ 咦？這兩個好像不太配，再想想看？";
-                    selectedLeft.classList.remove('selected');
-                    selectedLeft = null;
+                // 全部配對完成
+                if(matchedCount === totalMatches) {
+                    setTimeout(() => {
+                        document.getElementById('level1').classList.add('hidden');
+                        document.getElementById('story').classList.add('hidden');
+                        document.getElementById('stage-title').classList.add('hidden');
+                        document.getElementById('game-over').classList.remove('hidden');
+                        msgDiv.textContent = "";
+                    }, 1200);
                 }
-            });
-        });
+            } else {
+                // 配對失敗
+                msgDiv.className = "msg error";
+                msgDiv.textContent = "❌ 咦？這兩個好像不太配，再想想看？";
+                selectedLeft.classList.remove('selected');
+                selectedLeft = null;
+            }
+        }
+
+        // 啟動遊戲
+        initGame();
     </script>
 </body>
 </html>
